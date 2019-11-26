@@ -3,7 +3,10 @@
 path = "../PATH/"
 
 ## Configuracion para la conexion a MongoDB
-db_user     ="test_usr"
-db_password ="SuperTest"
-db_server   ="127.0.0.1"
-dp_port     ="27017"
+MONGO_HOST = "127.0.0.1"
+MONGO_PORT = 27017
+MONGO_DB = "test"
+MONGO_USER = "test_usr"
+MONGO_PASS = "SuperTest"
+
+##https://docs.atlas.mongodb.com/driver-connection/ 
