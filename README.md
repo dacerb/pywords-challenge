@@ -90,14 +90,15 @@ MongoDB server version: 3.6.3
 ```sh
 ## config.py
 
-path = "../PATH/"
+## Ruta donde se encuentran las colecciones
+FILE_PATH = "../PATH/"
 
-db_user     ="test_usr"
-db_password ="SuperTest"
-db_server   ="127.0.0.1"
-dp_port     ="27017"
-
-## No utilizar ROOT como usuario.
+## Configuracion para la conexion a MongoDB
+MONGO_HOST 	="localhost"
+MONGO_PORT 	= 27017
+MONGO_DB 	="test"
+MONGO_USER	="test_usr"
+MONGO_PASS 	="SuperTest"
 
 ```
 ```sh
@@ -108,7 +109,7 @@ python3 pywords.py
 #### Posibles problemas en VERSION="18.04.2 LTS (Bionic Beaver)"
 ```sh
 ## Actualizamos el repositorio en primer lugar.
-sudo apt-get install 
+sudo apt-get update
 
 #Instalacion de get-pip.py
 ModuleNotFoundError: No module named 'distutils.util'
