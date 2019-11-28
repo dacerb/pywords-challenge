@@ -41,6 +41,14 @@ virtualenv venv && source venv/bin/activate
 #Descargamos los paquetes de la aplicacion al repo wget https://files  .
 comandos................................................................
 
+
+## Crear un nuevo ambiente
+conda create --name pywords-run
+# activar el ambiente
+conda activate platzi-mongo
+# para desactivar el ambiente
+conda deactivate
+
 #Instalamos los paquetes al ambiente virtual y verificamos que esten instalados.
 pip install -r requirements.txt && pip freeze
 ```
@@ -104,6 +112,10 @@ MONGO_PASS 	="SuperTest"
 ```sh
 ## Ejecucion pywords.py
 python3 pywords.py
+
+##  pygraph.py 
+#
+
 
 ```
 #### Posibles problemas en VERSION="18.04.2 LTS (Bionic Beaver)"
