@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'David Acerbo'
 
-
+import codecs
+import re
 import config
-
-
 from pymongo import MongoClient
+
+
 ## Definimos el objeto para la conexion con la base de mongo
 connection 	= MongoClient(config.MONGO_HOST, config.MONGO_PORT)
 db 			= connection[config.MONGO_DB]
@@ -39,9 +40,10 @@ def processing_files(filesNames, path):
 def get_collection_in_format(path, fileName):
     try:  
         from collections import Counter
-        with open(path+fileName) as collection:
-            words = collection.read().split()
-            wordsCount = Counter(words)
+        with codecs.open(path+fileName, encoding='utf8') as collection:   ## uso el codecs utf8 para ordernar la salida
+            words = collection.read()
+            words_split = re.sub('([0-9]+)|([\W_]+)', ' ',words ).split() ## Saco caracteres Match y corto las palabras
+            wordsCount = Counter(words_split) #cuento palabras
             construc_document(wordsCount, fileName)
     except Exception as e:
         print(mark+"get_collection_in_format : {}".format(e))
@@ -173,7 +175,6 @@ def main():
         ##qty_distinct_words  = query_mongoDB_distinct_words()
         ##document_more_words = query_mongoDB_document_more_words()
         ##top_ten_collection  = query_top_ten_collection()
-        #qty_documents = 5
         qty_distinct_words  = 123123
         document_more_words = "doc1.txt"
         top_ten_collection  = ('pywords2','vuelvoloco','mas','menos','mona','chinverguencha','mono','zorro','GOy','Laa')
