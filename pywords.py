@@ -6,16 +6,24 @@ import re
 import config
 from pymongo import MongoClient
 
-
-## Definimos el objeto para la conexion con la base de mongo
-connection 	= MongoClient(config.MONGO_HOST, config.MONGO_PORT)
-db 			= connection[config.MONGO_DB]
-collection	=db[config.MONGO_COLLECTION]
-auth_mongo = collection#.authenticate(config.MONGO_USER, config.MONGO_PASS)
-
-
 ### Error general en Execptions
 mark=" [Error:]  "
+
+## Funcion para conectar se puede mejorar para pasar base y coleccion como parametros 
+def conect_db():
+    try:
+        from pymongo import MongoClient
+
+        client = MongoClient(config.MONGO_HOST, config.MONGO_PORT)
+        client.admin.authenticate(config.MONGO_USER, config.MONGO_PASS, mechanism = 'SCRAM-SHA-1', source=config.MONGO_DB)
+        db_name = client[config.MONGO_DB]
+        collection_name = config.MONGO_COLLECTION
+        conection = db_name[collection_name]
+        
+        return conection 
+        
+    except Exception as e:
+        print(mark+"conect_db: {}".format(e))
 
 
 ## Devuelve arreglo de la cantidad de archivos para analizar
@@ -71,22 +79,22 @@ def construc_document(wordsCount, fileName):
 ## Deberia subir a la BASE MONGO    
 def insert_to_db(document,fileName):
     try:
-        auth_mongo.insert(document)         
+        conect_db().insert_one(document)         
     except Exception as e:
         print(mark+"insert_to_db: {} -- {}".format(e,fileName))
 
 
 ## Querys a Mongo DB###########################
 def query_mongoDB_count_document():
-    return auth_mongo.count()
+    return conect_db().count_documents({})
 
 
 def query_mongoDB_distinct_words():
-    return 123
+    return conect_db().count_documents({})
 
 
 def query_mongoDB_document_more_words():
-    return "texto1.txt"
+    return conect_db().count_documents({})
 
 
 def query_top_ten_collection():
@@ -170,19 +178,14 @@ def main():
     try:
         filesNames = get_files_collection(path)
         processing_files(filesNames, path)
-        ### CONSULTO LA CANDAD
+   
+        ### Realizo consultas para luego pasar a pygraph
         qty_documents = query_mongoDB_count_document()
-        ##qty_distinct_words  = query_mongoDB_distinct_words()
-        ##document_more_words = query_mongoDB_document_more_words()
+        qty_distinct_words  = query_mongoDB_distinct_words()
+        document_more_words = query_mongoDB_document_more_words()
+     
         ##top_ten_collection  = query_top_ten_collection()
-        qty_distinct_words  = 123123
-        document_more_words = "doc1.txt"
         top_ten_collection  = ('pywords2','vuelvoloco','mas','menos','mona','chinverguencha','mono','zorro','GOy','Laa')
-
-        #####################################################################print("Cantidad documentos",qty_documents)
-        #####################################################################print("Documento con mas palabras",document_more_words)
-        #####################################################################print("Palabras distintas",qty_distinct_words)
-        #####################################################################print("Top ten de palabras",top_ten_collection)
 
         ## Generar reporte grafico
         pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection)
