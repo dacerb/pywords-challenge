@@ -60,18 +60,18 @@ def get_collection_in_format(path, fileName):
 ## Construyo el documento
 def construc_document(wordsCount, fileName):
     try:
+       
+       # Defino el Objeto 
+        document = {
+            'name': fileName,
+            'words': {}
+        }
 
-        import ast 
-        ## La famosa magic adapto el documento para poder insertarlo a mongoDB
-        magic=""
-        document="{'name': '"+ fileName +"', 'words': {"
-        for key, value in wordsCount.items():
-                document += "{2} '{0}': {1}".format(key.replace(".", ""), value, magic)
-                magic=","
-        document +="}}"
-        #Convierto String en diccionario
-        document = ast.literal_eval(document)
-        insert_to_db(document ,fileName )
+        for key, value in wordsCount.items():   ## con la siguiente Comprehension 
+            document['words'][key] = value      ## Recorro clave  agregando en el objto    
+            document['words'] = wordsCount      ## Recorro  valor agregando en el objto
+        insert_to_db(document, fileName)  ## llamo funcion insert_to_db convirtiendo a dict el objeto dict()
+        
     except Exception as e:
         print(mark+"construc_document: {} -- {}".format(e,fileName))
 
