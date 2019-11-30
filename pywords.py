@@ -26,6 +26,28 @@ def conect_db():
         print(mark+"conect_db: {}".format(e))
 
 
+def order_top_ten_words(objeto_diccionario):
+    
+    try:
+        import operator
+
+        
+        ## ordeno el con formato dict el diccionario de las 10 palabras mas usadas.
+        objeto_diccionario_sort = dict(sorted(objeto_diccionario.items(), key=lambda x: x[1], reverse=True))
+
+        ## Creo dos listas para almacenar los dalores por separados
+        words_ranking = list()
+        words_graph = list()
+        for value , key in objeto_diccionario_sort.items():
+            words_graph.append(value)
+            words_ranking.append(key)
+
+        return words_ranking , words_graph
+    
+    except Exception as e:
+        print(mark+"order_top_ten_words: {}".format(e))
+
+
 ## Devuelve arreglo de la cantidad de archivos para analizar
 def get_files_collection(path):
     try:
@@ -70,7 +92,7 @@ def construc_document(wordsCount, fileName):
         for key, value in wordsCount.items():   ## con la siguiente Comprehension 
             document['words'][key] = value      ## Recorro clave  agregando en el objto    
             document['words'] = wordsCount      ## Recorro  valor agregando en el objto
-        insert_to_db(document, fileName)  ## llamo funcion insert_to_db convirtiendo a dict el objeto dict()
+        insert_to_db(document, fileName)  
         
     except Exception as e:
         print(mark+"construc_document: {} -- {}".format(e,fileName))
@@ -97,9 +119,9 @@ def query_mongoDB_document_more_words():
     return conect_db().count_documents({})
 
 
-def query_top_ten_collection():
-    return {('Hola','Casa','Perro','GO','La','queso','mono','zorro','GOy','Laa')}
-## ^^ Querys a Mongo DB###########################
+def query_top_ten_collection_words():
+    return {"david": 22, "axel": 19, "martin":66, "sonor": 7, "rock": 23, "and": 50, "roll": 11, "y": 12, "si": 100, "awuanta": 40}   
+## ^^ Querys a Mongo DB###########################0
 
 ## consultar reloj
 def get_time():
@@ -111,14 +133,18 @@ def get_time():
         print(mark+"get_time: {}".format(e))
 
 ## mostrar grafico recibe (qty_documents,document_more_words,qty_distinct_words,top_ten_collection)
-def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collectio):
+def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words):
     try:
+        ## Me traigo los datos ordenados para armar el pie
+        words_ranking , words_graph = order_top_ten_words(top_ten_collection_words)
+        
         from matplotlib import pyplot as  plt
 
         ## Tuplas necesarias para graficar
-        words = top_ten_collectio                         ## Se agrega con el objeto 
-        slicesWords = (100,90,87,80,70,50,30,25,22,10)    ## Se agrega con el objeto 
-        valuesWords = (0.06,0,0,0,0,0,0,0,0,0) ## Podria generarlo con una funcion
+        words       = words_graph    ## Se agrega con el objeto 
+        slicesWords = words_ranking  ## Se agrega con el objeto 
+        valuesWords = (0.06,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0) ## Podria generarlo con una funcion
+        sliceColorWords = ('#FFE800','#DFCD15','#C2B424','#9B912E','#817A32','#605C32','#504E34','#3C3B2E','#292925','#000000')
        
         ## Datos para caja de texto
         distinct_words = qty_distinct_words
@@ -142,7 +168,7 @@ def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten
        
         ## defino el modo como se dibuja el grafico
         ax.axis('equal')
-        sliceColorWords = ('#FFE800','#DFCD15','#C2B424','#9B912E','#817A32','#605C32','#504E34','#3C3B2E','#292925','#000000')
+        
         _, _, graph_text = ax.pie(slicesWords,
                     colors=sliceColorWords,
                     labels=words,
@@ -183,12 +209,10 @@ def main():
         qty_documents = query_mongoDB_count_document()
         qty_distinct_words  = query_mongoDB_distinct_words()
         document_more_words = query_mongoDB_document_more_words()
-     
-        ##top_ten_collection  = query_top_ten_collection()
-        top_ten_collection  = ('pywords2','vuelvoloco','mas','menos','mona','chinverguencha','mono','zorro','GOy','Laa')
+        top_ten_collection_words  = query_top_ten_collection_words()
 
         ## Generar reporte grafico
-        pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection)
+        pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words)
         
    
         ## Calculo y muestro tiempo de ejecucion
