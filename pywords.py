@@ -86,11 +86,18 @@ def construc_document(wordsCount, fileName):
        # Defino el Objeto 
         document = {
             'name': fileName,
-            'words': {}
+            'words': {},            
+            'words_low_match':[],   ## ADD Field
+            'words_qty':0           ## ADD Field
+            
         }
 
         for key, value in wordsCount.items():   ## con la siguiente Comprehension 
             document['words'][key] = value      ## Recorro clave  agregando en el objto    
+            document['words_qty'] += 1
+            
+            if value == 1 :
+                document['words_low_match'].append(key)
             ##document['words'] = wordsCount    ## Opcion 2 de agregar el dict
         insert_to_db(document, fileName)  
         
@@ -116,8 +123,9 @@ def query_mongoDB_distinct_words():
 
 
 def query_mongoDB_document_more_words():
-    document_name = conect_db().find_one({},{'name':1, '_id':0})            ## Consulta a mejorar traer todo de una
-    return document_name['name']
+    document_name = conect_db().find({},{'name':1,'_id':0}).sort([('words_qty',-1)]).limit(1)     ## Consulta a mejorar traer todo de una  OK
+    document_name_get = dict(document_name[0])
+    return document_name_get['name']
 
 
 def query_top_ten_collection_words():
