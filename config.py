@@ -1,6 +1,6 @@
 
 ## Ruta donde se encuentran las colecciones
-FILE_PATH = "../collection_testing/"
+FILE_PATH = "../collection/"
 
 ## Configuracion para la conexion a MongoDB
 MONGO_HOST 	="localhost"

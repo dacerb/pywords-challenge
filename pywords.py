@@ -108,20 +108,22 @@ def insert_to_db(document,fileName):
 
 ## Querys a Mongo DB###########################
 def query_mongoDB_count_document():
-    return conect_db().count_documents({})
+    return conect_db().count_documents({}) ## Consulta a mejorar traer todo de una
 
 
 def query_mongoDB_distinct_words():
-    return conect_db().count_documents({})
+    return conect_db().count_documents({}) ## Consulta a mejorar traer todo de una
 
 
 def query_mongoDB_document_more_words():
-    return conect_db().count_documents({})
+    document_name = conect_db().find_one({},{'name':1, '_id':0})            ## Consulta a mejorar traer todo de una
+    return document_name['name']
 
 
 def query_top_ten_collection_words():
-    return {"david": 22, "axel": 19, "martin":66, "sonor": 7, "rock": 23, "and": 50, "roll": 11, "y": 12, "si": 100, "awuanta": 40}   
-## ^^ Querys a Mongo DB###########################0
+    document_name = conect_db().find_one({},{'words':1,'name':1, '_id':0})   ## Consulta a mejorar traer todo de una
+    return document_name['words'] 
+## Querys a Mongo DB###########################0
 
 ## consultar reloj
 def get_time():
@@ -141,8 +143,8 @@ def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten
         from matplotlib import pyplot as  plt
 
         ## Tuplas necesarias para graficar
-        words       = words_graph    ## Se agrega con el objeto 
-        slicesWords = words_ranking  ## Se agrega con el objeto 
+        words       = words_graph[:10]    ## Se agrega la lista procesada y limito de [0:10] 
+        slicesWords = words_ranking[:10]  ## Se agrega la lista procesada y limito de [0:10] 
         valuesWords = (0.06,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0) ## Podria generarlo con una funcion
         sliceColorWords = ('#FFE800','#DFCD15','#C2B424','#9B912E','#817A32','#605C32','#504E34','#3C3B2E','#292925','#000000')
        
