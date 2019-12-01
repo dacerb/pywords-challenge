@@ -91,7 +91,7 @@ def construc_document(wordsCount, fileName):
 
         for key, value in wordsCount.items():   ## con la siguiente Comprehension 
             document['words'][key] = value      ## Recorro clave  agregando en el objto    
-            document['words'] = wordsCount      ## Recorro  valor agregando en el objto
+            ##document['words'] = wordsCount    ## Opcion 2 de agregar el dict
         insert_to_db(document, fileName)  
         
     except Exception as e:
@@ -135,7 +135,7 @@ def get_time():
         print(mark+"get_time: {}".format(e))
 
 ## mostrar grafico recibe (qty_documents,document_more_words,qty_distinct_words,top_ten_collection)
-def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words):
+def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words,start_run):
     try:
         ## Me traigo los datos ordenados para armar el pie
         words_ranking , words_graph = order_top_ten_words(top_ten_collection_words)
@@ -191,6 +191,8 @@ def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten
         plt.text(x, y, text_box, color='white', weight='bold', horizontalalignment='left', verticalalignment='center', bbox=dict(facecolor='#000000', alpha=0.9 ,boxstyle='round', edgecolor='#3C3B2E', pad=1) )
 
         ## mustro pyplot que contiene todo los parametros ya cargados.
+        elapsed_time = get_time() - start_run
+        print("\n\nElapsed time: {} seconds --> Execution time".format(elapsed_time))
         plt.show()
 
     except Exception as e:
@@ -214,17 +216,15 @@ def main():
         top_ten_collection_words  = query_top_ten_collection_words()
 
         ## Generar reporte grafico
-        pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words)
+        pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words,start_run)
         
    
         ## Calculo y muestro tiempo de ejecucion
         elapsed_time = get_time() - start_run
-        print("\n\nElapsed time: {} seconds.".format(elapsed_time))
+        print("Elapsed time: {} seconds --> Exit pywords\n\n".format(elapsed_time))
     except Exception as e:
         print(mark+"main: {}".format(e))
 
-    print("Push anykey for exit")
-    input()
  
 
 ## Atrapa la ejecucion interna __main__ de python para ordejar la ejecucion.
