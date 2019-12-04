@@ -93,7 +93,7 @@ def construc_document(wordsCount, fileName):
         for key, value in wordsCount.items():   ## con la siguiente Comprehension 
             document['words'][key] = value      ## Recorro clave  agregando en el objto    
         
-        insert_to_db(document, fileName)  
+        insert_to_db(document, fileName)        ## Mando a insertar la base de datos 
         
     except Exception as e:
         print(mark+"construc_document: {} -- {}".format(e,fileName))
@@ -112,58 +112,77 @@ def query_mongoDB_count_document():
     return conect_db().count_documents({}) ## Consulta a mejorar traer todo de una
 
 
+## descarga los documentos de mongo, y procesa en moria haciendo merge de los diccionarios y durante el proceso encuentra el documento con mayor cantidad de palabras.
 def query_mongodb_object_document():    
     
     
     try:
         from collections import defaultdict
+        
+        aux_qty_document = 0
+        obtain_document_name = ""
         dictionary_total = defaultdict(int)
         query_get_documents_db = conect_db().find({},{'name': 1, 'words': 1})
+        
         for doc in query_get_documents_db:
+            
             get_document_name        = doc['name']  ## Almaceno los nombres por documento recorrido
             get_document_dictionary  = doc['words'] ## Almaceno los dict por documento recorrido
-            get_document_qty         = merge_dicts(dictionary_total , get_document_dictionary)
-        
-        ## Resuelvo documento con mas palabras
-        
-        print(get_document_name)
-        print(count_dict_dimension(get_document_dictionary))
-        
+            dictionary_total  = merge_dicts(dictionary_total , get_document_dictionary) ## Sumo palabras de todos los documentos agregando e incrementando segun fuera el caso
+            
+            
+            get_document_qty  = count_dictionary_dimension(get_document_dictionary)  ## Cuento palabras sin tener en cuenta la repeticion tengo que mejorar IMPORTANTE !!!
+            ## aprovecho la recursividad para ir validando que documento tiene mas palabras
+            if aux_qty_document <= get_document_qty :
+                aux_qty_document = get_document_qty
+                obtain_document_name = get_document_name            
+                
         ## Devuelvo String nombre del documento con mas palabras, merge de todos los diccionarios agregando no existentes y sumando palabras existentes    
-        print(dictionary_total)
-        
-        ## qty_distinct_words  , document_more_words , top_ten_collection_words
-        return  20 , "david.txt",  dictionary_total
+        ##           document_more_words , top_ten_collection_words
+        return       obtain_document_name ,  dictionary_total
    
     except Exception as e:
         print(mark+"query_mongoDB_count_document: {}".format(e))    
 
-## Querys a Mongo DB###########################0
-
 
 ## Suma diccionarios si hay palabras repetidas y agrega las que no.
 def merge_dicts(dictionary_total, get_document_dictionary):
-    try:
-        for key in get_document_dictionary.keys():
-            dictionary_total[key] += 1
+    try: 
+        dictionary_total = { key: dictionary_total.get(key, 0) + get_document_dictionary.get(key, 0) for key in set(dictionary_total) | set(get_document_dictionary) }
+        return dictionary_total ## retorno suma de dos diccionarios, el total mas el iterante 
     except Exception as e:
         print(mark+"merge_dicts: {}".format(e))
     
 
 ## cuenta la dimension de elementos que contiene el directorio 
-def count_dict_dimension(get_document_dictionary):
+def count_dictionary_dimension(get_document_dictionary):
 
     try:
         words_qty = 0
-        for value in get_document_dictionary.values():
+        for  value in get_document_dictionary.values():
             words_qty = words_qty + value
+            
         return words_qty
 
     except Exception as e:
         print(mark+"count_dict_dimension: {}".format(e))
 
 
-
+## Ordena y recorre por los valores que indican la repeticion de la palabra donde 1 indica que solo aparece una ves 
+## lo que lo hace distinta
+def search_distinct_words_dictionary(dictionary_total):
+    objeto_diccionario_sort = dict(sorted(dictionary_total.items(), key=lambda x: x[1], reverse=False))
+    
+    qty_distinct_words = 0
+    for value in objeto_diccionario_sort.values():
+        
+        if value == 1:
+            qty_distinct_words += value
+        else:
+             break
+         
+    return qty_distinct_words
+    
 
 ## consultar reloj
 def get_time():
@@ -187,6 +206,7 @@ def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten
         slicesWords = words_ranking[:10]  ## Se agrega la lista procesada y limito de [0:10] 
         valuesWords = (0.06,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0) ## Podria generarlo con una funcion
         sliceColorWords = ('#FFE800','#DFCD15','#C2B424','#9B912E','#817A32','#605C32','#504E34','#3C3B2E','#292925','#000000')
+        
        
         ## Datos para caja de texto
         distinct_words = qty_distinct_words
@@ -251,8 +271,11 @@ def main():
      
       
         ### Realizo consultas para luego pasar a pygraph
-        qty_documents = query_mongoDB_count_document()
-        qty_distinct_words  , document_more_words , top_ten_collection_words  = query_mongodb_object_document()
+        qty_documents                            = query_mongoDB_count_document()
+        obtain_document_name , dictionary_total  = query_mongodb_object_document()
+        document_more_words                      = obtain_document_name
+        top_ten_collection_words                 = dictionary_total
+        qty_distinct_words                       = search_distinct_words_dictionary(dictionary_total)
 
         ## Generar reporte grafico
         pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words,start_run)
@@ -263,7 +286,6 @@ def main():
         print("Elapsed time: {} seconds --> Exit pywords\n\n".format(elapsed_time))
     except Exception as e:
         print(mark+"main: {}".format(e))
-
  
 
 ## Atrapa la ejecucion interna __main__ de python para ordejar la ejecucion.
