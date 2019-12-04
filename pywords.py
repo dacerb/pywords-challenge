@@ -4,16 +4,19 @@ __author__ = 'David Acerbo'
 import codecs
 import re
 import config
+import operator
 from pymongo import MongoClient
+from collections import Counter , defaultdict
+from matplotlib import pyplot as  plt
 
 ### Error general en Execptions
 mark=" [Error:]  "
 
+
 ## Funcion para conectar se puede mejorar para pasar base y coleccion como parametros 
 def conect_db():
     try:
-        from pymongo import MongoClient
-
+       
         client = MongoClient(config.MONGO_HOST, config.MONGO_PORT)
         client.admin.authenticate(config.MONGO_USER, config.MONGO_PASS, mechanism = 'SCRAM-SHA-1', source=config.MONGO_DB)
         db_name = client[config.MONGO_DB]
@@ -29,9 +32,8 @@ def conect_db():
 def order_top_ten_words(objeto_diccionario):
     
     try:
-        import operator
-
         
+
         ## ordeno el con formato dict el diccionario de las 10 palabras mas usadas.
         objeto_diccionario_sort = dict(sorted(objeto_diccionario.items(), key=lambda x: x[1], reverse=True))
 
@@ -50,6 +52,7 @@ def order_top_ten_words(objeto_diccionario):
 
 ## Devuelve arreglo de la cantidad de archivos para analizar
 def get_files_collection(path):
+    
     try:
         from os import listdir
         return  listdir(path)
@@ -59,6 +62,7 @@ def get_files_collection(path):
 
 ## Por cada archivo/colecion orquesto el procesamiento
 def processing_files(filesNames, path):
+    
     try:
         for fileName in filesNames:
             get_collection_in_format(path, fileName)
@@ -68,13 +72,16 @@ def processing_files(filesNames, path):
 
 ## Procesa archivo/colecion recibida bajo path y fileName
 def get_collection_in_format(path, fileName):
+    
     try:  
-        from collections import Counter
+        
         with codecs.open(path+fileName, encoding='utf8') as collection:   ## uso el codecs utf8 para ordernar la salida
+            
             words = collection.read()
             words_split = re.sub('([0-9]+)|([\W_]+)', ' ',words ).split() ## Saco caracteres Match y corto las palabras
             wordsCount = Counter(words_split) #cuento palabras
             construc_document(wordsCount, fileName)
+            
     except Exception as e:
         print(mark+"get_collection_in_format : {}".format(e))
 
@@ -107,9 +114,11 @@ def insert_to_db(document,fileName):
         print(mark+"insert_to_db: {} -- {}".format(e,fileName))
 
 
-## Querys a Mongo DB###########################
+## consulta a mongo cantidad de documentos
 def query_mongoDB_count_document():
-    return conect_db().count_documents({}) ## Consulta a mejorar traer todo de una
+    qty_documents = conect_db().count_documents({})
+    
+    return qty_documents 
 
 
 ## descarga los documentos de mongo, y procesa en moria haciendo merge de los diccionarios y durante el proceso encuentra el documento con mayor cantidad de palabras.
@@ -117,7 +126,6 @@ def query_mongodb_object_document():
     
     
     try:
-        from collections import defaultdict
         
         aux_qty_document = 0
         obtain_document_name = ""
@@ -147,6 +155,7 @@ def query_mongodb_object_document():
 
 ## Suma diccionarios si hay palabras repetidas y agrega las que no.
 def merge_dicts(dictionary_total, get_document_dictionary):
+    
     try: 
         dictionary_total = { key: dictionary_total.get(key, 0) + get_document_dictionary.get(key, 0) for key in set(dictionary_total) | set(get_document_dictionary) }
         return dictionary_total ## retorno suma de dos diccionarios, el total mas el iterante 
@@ -171,6 +180,7 @@ def count_dictionary_dimension(get_document_dictionary):
 ## Ordena y recorre por los valores que indican la repeticion de la palabra donde 1 indica que solo aparece una ves 
 ## lo que lo hace distinta
 def search_distinct_words_dictionary(dictionary_total):
+    
     objeto_diccionario_sort = dict(sorted(dictionary_total.items(), key=lambda x: x[1], reverse=False))
     
     qty_distinct_words = 0
@@ -186,20 +196,22 @@ def search_distinct_words_dictionary(dictionary_total):
 
 ## consultar reloj
 def get_time():
+    
     try:
         from time import time
         chronometer = time()
         return chronometer
+    
     except Exception as e:
         print(mark+"get_time: {}".format(e))
 
 ## mostrar grafico recibe (qty_documents,document_more_words,qty_distinct_words,top_ten_collection)
 def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words,start_run):
     try:
+        
         ## Me traigo los datos ordenados para armar el pie
         words_ranking , words_graph = order_top_ten_words(top_ten_collection_words)
         
-        from matplotlib import pyplot as  plt
 
         ## Tuplas necesarias para graficar
         words       = words_graph[:10]    ## Se agrega la lista procesada y limito de [0:10] 
@@ -252,7 +264,7 @@ def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten
 
         ## mustro pyplot que contiene todo los parametros ya cargados.
         elapsed_time = get_time() - start_run
-        print("\n\nElapsed time: {} seconds --> Execution time".format(elapsed_time))
+        print("Elapsed time: {} seconds --> pygraph_reports".format(elapsed_time))
         plt.show()
 
     except Exception as e:
@@ -262,13 +274,17 @@ def pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten
 ## Ejecucion principal del programa
 def main():
     
-    ## Ruta donde estan los archivos
-    start_run = get_time()
-    path = config.FILE_PATH
+
     try:
+        
+        ## Ruta donde estan los archivos
+        start_run = get_time()
+        path = config.FILE_PATH
+         
         filesNames = get_files_collection(path)
         processing_files(filesNames, path)
-     
+        elapsed_time = get_time() - start_run    
+        print("\n\nElapsed time: {} seconds --> processing_files".format(elapsed_time))
       
         ### Realizo consultas para luego pasar a pygraph
         qty_documents                            = query_mongoDB_count_document()
@@ -276,13 +292,15 @@ def main():
         document_more_words                      = obtain_document_name
         top_ten_collection_words                 = dictionary_total
         qty_distinct_words                       = search_distinct_words_dictionary(dictionary_total)
-
+        
+        elapsed_time = get_time() - start_run    
+        print("Elapsed time: {} seconds --> query_mongodb".format(elapsed_time))
         ## Generar reporte grafico
         pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words,start_run)
         
    
         ## Calculo y muestro tiempo de ejecucion
-        elapsed_time = get_time() - start_run
+        elapsed_time = get_time() - start_run    
         print("Elapsed time: {} seconds --> Exit pywords\n\n".format(elapsed_time))
     except Exception as e:
         print(mark+"main: {}".format(e))
