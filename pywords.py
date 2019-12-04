@@ -86,19 +86,13 @@ def construc_document(wordsCount, fileName):
        # Defino el Objeto 
         document = {
             'name': fileName,
-            'words': {},            
-            'words_low_match':[],   ## ADD Field
-            'words_qty':0           ## ADD Field
+            'words': {}            
             
         }
 
         for key, value in wordsCount.items():   ## con la siguiente Comprehension 
             document['words'][key] = value      ## Recorro clave  agregando en el objto    
-            document['words_qty'] += 1
-            
-            if value == 1 :
-                document['words_low_match'].append(key)
-            ##document['words'] = wordsCount    ## Opcion 2 de agregar el dict
+        
         insert_to_db(document, fileName)  
         
     except Exception as e:
@@ -118,20 +112,58 @@ def query_mongoDB_count_document():
     return conect_db().count_documents({}) ## Consulta a mejorar traer todo de una
 
 
-def query_mongoDB_distinct_words():
-    return conect_db().count_documents({}) ## Consulta a mejorar traer todo de una
+def query_mongodb_object_document():    
+    
+    
+    try:
+        from collections import defaultdict
+        dictionary_total = defaultdict(int)
+        query_get_documents_db = conect_db().find({},{'name': 1, 'words': 1})
+        for doc in query_get_documents_db:
+            get_document_name        = doc['name']  ## Almaceno los nombres por documento recorrido
+            get_document_dictionary  = doc['words'] ## Almaceno los dict por documento recorrido
+            get_document_qty         = merge_dicts(dictionary_total , get_document_dictionary)
+        
+        ## Resuelvo documento con mas palabras
+        
+        print(get_document_name)
+        print(count_dict_dimension(get_document_dictionary))
+        
+        ## Devuelvo String nombre del documento con mas palabras, merge de todos los diccionarios agregando no existentes y sumando palabras existentes    
+        print(dictionary_total)
+        
+        ## qty_distinct_words  , document_more_words , top_ten_collection_words
+        return  20 , "david.txt",  dictionary_total
+   
+    except Exception as e:
+        print(mark+"query_mongoDB_count_document: {}".format(e))    
 
-
-def query_mongoDB_document_more_words():
-    document_name = conect_db().find({},{'name':1,'_id':0}).sort([('words_qty',-1)]).limit(1)     ## Consulta a mejorar traer todo de una  OK
-    document_name_get = dict(document_name[0])
-    return document_name_get['name']
-
-
-def query_top_ten_collection_words():
-    document_name = conect_db().find_one({},{'words':1,'name':1, '_id':0})   ## Consulta a mejorar traer todo de una
-    return document_name['words'] 
 ## Querys a Mongo DB###########################0
+
+
+## Suma diccionarios si hay palabras repetidas y agrega las que no.
+def merge_dicts(dictionary_total, get_document_dictionary):
+    try:
+        for key in get_document_dictionary.keys():
+            dictionary_total[key] += 1
+    except Exception as e:
+        print(mark+"merge_dicts: {}".format(e))
+    
+
+## cuenta la dimension de elementos que contiene el directorio 
+def count_dict_dimension(get_document_dictionary):
+
+    try:
+        words_qty = 0
+        for value in get_document_dictionary.values():
+            words_qty = words_qty + value
+        return words_qty
+
+    except Exception as e:
+        print(mark+"count_dict_dimension: {}".format(e))
+
+
+
 
 ## consultar reloj
 def get_time():
@@ -216,12 +248,11 @@ def main():
     try:
         filesNames = get_files_collection(path)
         processing_files(filesNames, path)
-   
+     
+      
         ### Realizo consultas para luego pasar a pygraph
         qty_documents = query_mongoDB_count_document()
-        qty_distinct_words  = query_mongoDB_distinct_words()
-        document_more_words = query_mongoDB_document_more_words()
-        top_ten_collection_words  = query_top_ten_collection_words()
+        qty_distinct_words  , document_more_words , top_ten_collection_words  = query_mongodb_object_document()
 
         ## Generar reporte grafico
         pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words,start_run)
