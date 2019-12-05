@@ -138,7 +138,6 @@ def query_mongodb_object_document():
             get_document_dictionary  = doc['words'] ## Almaceno los dict por documento recorrido
             dictionary_total  = merge_dicts(dictionary_total , get_document_dictionary) ## Sumo palabras de todos los documentos agregando e incrementando segun fuera el caso
             
-            
             get_document_qty  = count_dictionary_dimension(get_document_dictionary)  ## Cuento palabras sin tener en cuenta la repeticion tengo que mejorar IMPORTANTE !!!
             ## aprovecho la recursividad para ir validando que documento tiene mas palabras
             if aux_qty_document <= get_document_qty :
@@ -276,6 +275,7 @@ def main():
     
 
     try:
+        conect_db().drop() ## Borro la base para debug evitar funcionamientos inesperados al procesar los nuevos datos y los anteriores de la coleccion.
         
         ## Ruta donde estan los archivos
         start_run = get_time()
@@ -289,8 +289,8 @@ def main():
         ### Realizo consultas para luego pasar a pygraph
         qty_documents                            = query_mongoDB_count_document()
         obtain_document_name , dictionary_total  = query_mongodb_object_document()
-        document_more_words                      = obtain_document_name
-        top_ten_collection_words                 = dictionary_total
+        document_more_words                      = obtain_document_name ## Corregir para que este mas prolijo
+        top_ten_collection_words                 = dictionary_total     ## Corregir para que este mas prolijo
         qty_distinct_words                       = search_distinct_words_dictionary(dictionary_total)
         
         elapsed_time = get_time() - start_run    
@@ -298,7 +298,7 @@ def main():
         ## Generar reporte grafico
         pygraph_reports(qty_documents,document_more_words,qty_distinct_words,top_ten_collection_words,start_run)
         
-   
+        
         ## Calculo y muestro tiempo de ejecucion
         elapsed_time = get_time() - start_run    
         print("Elapsed time: {} seconds --> Exit pywords\n\n".format(elapsed_time))
